@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
-# Reemplaza con el usuario de tu canal público (ejemplo: "@fullpelis_storage")
+# Canal público configurado como servidor
 CANAL_PUBLICO = "@fullpelis_storage"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,7 +26,7 @@ async def procesar_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mensaje_en_canal = await context.bot.send_video(
             chat_id=CANAL_PUBLICO,
             video=url_video,
-            caption=f"Video subido desde el bot."
+            caption="Video subido desde el bot."
         )
         
         # 2. Obtiene el enlace público único del mensaje en el canal (t.me/canal/id)
