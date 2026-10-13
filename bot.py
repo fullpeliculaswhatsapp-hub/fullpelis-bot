@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 # Reemplaza con el usuario de tu canal público (ejemplo: "@fullpelis_storage")
-CANAL_PUBLICO = "@tu_canal_publico"
+CANAL_PUBLICO = "@fullpelis_storage"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
