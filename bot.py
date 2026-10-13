@@ -1,32 +1,56 @@
 import os
-import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+# Reemplaza con el usuario de tu canal público (ejemplo: "@fullpelis_storage")
+CANAL_PUBLICO = "@tu_canal_publico"
 
-async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    url = update.message.text
-    chat_id = update.message.chat_id
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "¡Hola! Envíame un enlace de video .mp4. "
+        "Lo guardaré en el canal de respaldo y te generaré un enlace público."
+    )
 
-    if url.startswith("http") and ".mp4" in url.lower():
-        await context.bot.send_message(chat_id=chat_id, text="Procesando video...")
-        try:
-            await context.bot.send_video(chat_id=chat_id, video=url)
-        except Exception as e:
-            await context.bot.send_message(chat_id=chat_id, text=f"Error al enviar el video: {str(e)}")
-    else:
-        await context.bot.send_message(chat_id=chat_id, text="Envía un enlace directo válido que contenga .mp4")
-
-if __name__ == '__main__':
-    TOKEN = os.getenv('TELEGRAM_TOKEN')
+async def procesar_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url_video = update.message.text
     
-    application = ApplicationBuilder().token(TOKEN).build()
-    text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_url)
-    application.add_handler(text_handler)
+    if not url_video.startswith("http"):
+        await update.message.reply_text("Por favor, envía un enlace válido que comience con http o https.")
+        return
 
+    msg = await update.message.reply_text("⏳ Subiendo el video al canal servidor...")
+
+    try:
+        # 1. Envía el video directamente al canal público configurado
+        mensaje_en_canal = await context.bot.send_video(
+            chat_id=CANAL_PUBLICO,
+            video=url_video,
+            caption=f"Video subido desde el bot."
+        )
+        
+        # 2. Obtiene el enlace público único del mensaje en el canal (t.me/canal/id)
+        message_id = mensaje_en_canal.message_id
+        canal_username = CANAL_PUBLICO.replace("@", "")
+        enlace_publico = f"https://t.me/{canal_username}/{message_id}"
+        
+        # 3. Le responde al usuario con el enlace generado
+        await msg.edit_text(
+            f"✅ **¡Video procesado con éxito!**\n\n"
+            f"🔗 **Tu enlace público es:**\n{enlace_publico}",
+            parse_mode="Markdown"
+        )
+
+    except Exception as e:
+        await msg.edit_text(f"Hubo un error al procesar el video: {str(e)}")
+
+def main():
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, procesar_video))
+    
     print("Bot iniciado correctamente...")
-    application.run_polling()
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
