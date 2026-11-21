@@ -4,7 +4,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import urllib.request
 
-# Servidor HTTP básico para Render (Mantiene el servicio activo + Sirve de Proxy HLS)
+# Servidor HTTP básico con soporte de Proxy para canales en vivo
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_path = urlparse(self.path)
@@ -40,7 +40,6 @@ def run_web_server():
     server.serve_forever()
 
 if __name__ == '__main__':
-    # Iniciar servidor web en segundo plano para Render
     t = threading.Thread(target=run_web_server)
     t.start()
     print("Servidor Proxy y Web iniciado correctamente.")
